@@ -9,7 +9,7 @@
 
 const WHATSAPP_NUMBER    = "50683961344";
 const CONTACT_EMAIL      = "dave.henr123@gmail.com";
-const FORMSPREE_ENDPOINT = "https://formspree.io/f/REEMPLAZAR_ID"; // ⚙️ Ver instrucciones
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/xrpekpgr"; // ⚙️ Ver instrucciones
 
 const WHATSAPP_MESSAGE = "Hola, estoy interesado en conocer los servicios de World Business Trainer para mi negocio.";
 
