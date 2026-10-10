@@ -1,15 +1,15 @@
 /* ============================================================
    World Business Trainer — main.js
    ------------------------------------------------------------
-   ⚙️ CONFIGURACIÓN RÁPIDA:
-   Cambiá las dos constantes de abajo por tus datos reales.
-   El número de WhatsApp debe ir en formato internacional,
-   sin espacios, sin "+" y sin guiones.
-   Ejemplo Costa Rica: 50688887777
+   ⚙️ CONFIGURACIÓN:
+   - WHATSAPP_NUMBER: tu número real (formato internacional sin +)
+   - CONTACT_EMAIL: correo comercial visible en el sitio
+   - FORMSPREE_ENDPOINT: endpoint de Formspree para recibir el formulario
    ============================================================ */
 
-const WHATSAPP_NUMBER = "50600000000"; // ⚙️ REEMPLAZAR
-const CONTACT_EMAIL   = "contacto@tudominio.com"; // ⚙️ REEMPLAZAR
+const WHATSAPP_NUMBER    = "50683961344";
+const CONTACT_EMAIL      = "dave.henr123@gmail.com";
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/REEMPLAZAR_ID"; // ⚙️ Ver instrucciones
 
 const WHATSAPP_MESSAGE = "Hola, estoy interesado en conocer los servicios de World Business Trainer para mi negocio.";
 
@@ -40,7 +40,6 @@ const WHATSAPP_MESSAGE = "Hola, estoy interesado en conocer los servicios de Wor
     toggle.setAttribute("aria-expanded", String(open));
   });
 
-  // Cerrar al hacer clic en un enlace
   nav.querySelectorAll("a").forEach(a => {
     a.addEventListener("click", () => {
       nav.classList.remove("open");
@@ -49,7 +48,7 @@ const WHATSAPP_MESSAGE = "Hola, estoy interesado en conocer los servicios de Wor
   });
 })();
 
-/* ---------- Validación del formulario ---------- */
+/* ---------- Validación y envío del formulario ---------- */
 (function setupForm() {
   const form = document.getElementById("contactForm");
   const status = document.getElementById("formStatus");
@@ -89,7 +88,7 @@ const WHATSAPP_MESSAGE = "Hola, estoy interesado en conocer los servicios de Wor
     });
   });
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     status.className = "form-status";
     status.textContent = "";
@@ -105,7 +104,7 @@ const WHATSAPP_MESSAGE = "Hola, estoy interesado en conocer los servicios de Wor
       return;
     }
 
-    // Armamos un mensaje con los datos del formulario y lo enviamos por WhatsApp
+    // Recolectar datos
     const data = {
       nombre:   form.nombre.value.trim(),
       empresa:  form.empresa.value.trim(),
@@ -115,6 +114,28 @@ const WHATSAPP_MESSAGE = "Hola, estoy interesado en conocer los servicios de Wor
       mensaje:  form.mensaje.value.trim()
     };
 
+    // === 1. Enviar por correo vía Formspree ===
+    status.textContent = "Enviando consulta…";
+    let emailSent = false;
+
+    try {
+      const response = await fetch(FORMSPREE_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          _subject: `Nueva consulta web — ${data.nombre}`,
+          ...data
+        })
+      });
+      emailSent = response.ok;
+    } catch (err) {
+      console.warn("No se pudo enviar por Formspree:", err);
+    }
+
+    // === 2. Abrir WhatsApp con el resumen ===
     const texto =
       `Hola, quiero solicitar una cotización.%0A%0A` +
       `*Nombre:* ${data.nombre}%0A` +
@@ -126,13 +147,17 @@ const WHATSAPP_MESSAGE = "Hola, estoy interesado en conocer los servicios de Wor
 
     const waURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${texto}`;
 
-    status.classList.add("success");
-    status.textContent = "¡Gracias! Te estamos redirigiendo a WhatsApp para completar el envío…";
+    if (emailSent) {
+      status.classList.add("success");
+      status.textContent = "✅ ¡Consulta enviada! Te estamos redirigiendo a WhatsApp para confirmar…";
+    } else {
+      status.classList.add("success");
+      status.textContent = "Te estamos redirigiendo a WhatsApp para completar el envío…";
+    }
 
-    // Abrimos WhatsApp en una nueva pestaña
     window.open(waURL, "_blank", "noopener");
 
-    // Opcional: también podemos ofrecer envío por correo
-    // form.reset();
+    // Resetear después de un momento
+    setTimeout(() => form.reset(), 1500);
   });
 })();
